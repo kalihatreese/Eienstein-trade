@@ -158,3 +158,74 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+import requests
+
+class EinsteinTrade:
+    def __init__(self):
+        self.portfolio = {}
+        self.balance = 0
+        self.api_key = "4C5SQM5B83RFQAHB"  # Replace with your Alpha Vantage API key
+
+    def buy(self, symbol, quantity, price):
+        total_cost = quantity * price
+        if total_cost <= self.balance:
+            if symbol not in self.portfolio:
+                self.portfolio[symbol] = 0
+            self.portfolio[symbol] += quantity
+            self.balance -= total_cost
+            print(f"Bought {quantity} shares of {symbol} at ${price} each.")
+        else:
+            print("Insufficient balance to complete the purchase.")
+
+    def sell(self, symbol, quantity, price):
+        if symbol not in self.portfolio or self.portfolio[symbol] < quantity:
+            print("Unable to complete the sale.")
+        else:
+            self.portfolio[symbol] -= quantity
+            total_earning = quantity * price
+            self.balance += total_earning
+            print(f"Sold {quantity} shares of {symbol} at ${price} each.")
+
+    def display_portfolio(self):
+        print("Portfolio:")
+        for symbol, quantity in self.portfolio.items():
+            print(f"{symbol}: {quantity} shares")
+
+        print(f"Balance: ${self.balance}")
+
+    def get_stock_price(self, symbol):
+        try:
+            response = requests.get(f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={self.api_key}")
+            if response.status_code == 200:
+                data = response.json()
+                if 'Global Quote' in data:
+                    price = float(data['Global Quote']['05. price'])
+                    return price
+                else:
+                    print("Stock price data not found.")
+            else:
+                print("Error retrieving stock price.")
+        except requests.exceptions.RequestException:
+            print("Error retrieving stock price. Please check your internet connection.")
+
+    def place_order(self, symbol, quantity, order_type):
+        price = self.get_stock_price(symbol)
+        if price:
+            if order_type == "buy":
+                self.buy(symbol, quantity, price)
+            elif order_type == "sell":
+                self.sell(symbol, quantity, price)
+            else:
+                print("Invalid order type.")
+        else:
+            print("Unable to place order.")
+
+# Example usage
+trade_app = EinsteinTrade()
+
+trade_app.place_order("AAPL", 10, "buy")
+trade_app.place_order("GOOG", 5, "buy")
+trade_app.display_portfolio()
+
+trade_app.place_order("AAPL", 3, "sell")
+trade_app.display_portfolio()
