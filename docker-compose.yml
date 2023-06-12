@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  app:
+    image: stock-price-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python app.py
