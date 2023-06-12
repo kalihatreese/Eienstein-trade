@@ -1,0 +1,45 @@
+# Dockerfile
+
+FROM python:3.8
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install -r requirements.txt
+
+COPY . .
+
+CMD ["python", "app.py"]
+
+# app.py
+
+import numpy as np
+import pandas as pd
+import requests
+
+def get_stock_price(symbol):
+    url = "https://api.iextrading.com/1.0/stock/{}/price".format(symbol)
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json()["price"]
+    else:
+        raise Exception("Error getting stock price for {}: {}".format(symbol, response.status_code))
+
+def main():
+    # Get the stock symbols from the user
+    symbols = input("Enter stock symbols (comma-separated): ").split(",")
+
+    # Get the stock prices
+    prices = []
+    for symbol in symbols:
+        price = get_stock_price(symbol)
+        prices.append(price)
+
+    # Print the stock prices
+    print("Stock prices:")
+    for symbol, price in zip(symbols, prices):
+        print("{}: ${}".format(symbol, price))
+
+if __name__ == "__main__":
+    main()
