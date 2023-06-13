@@ -1,0 +1,45 @@
+import subprocess
+
+def create_maven_project(groupId, artifactId):
+    """Creates a Maven project with the given group ID and artifact ID."""
+    command = [
+        "mvn", "archetype:generate",
+        "-DgroupId={}".format(groupId),
+        "-DartifactId={}".format(artifactId)
+    ]
+    subprocess.check_call(command)
+
+def add_assembly_dependency(pom_file):
+    """Adds the Maven Assembly Plugin dependency to the given pom.xml file."""
+    with open(pom_file, "r") as f:
+        pom_contents = f.read()
+
+    with open(pom_file, "w") as f:
+        f.write(pom_contents.replace("</dependencies>", """
+            <dependency>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.3.0</version>
+            </dependency>
+        </dependencies>"""))
+
+def build_maven_project(pom_file):
+    """Builds the Maven project with the given pom.xml file."""
+    command = ["mvn", "clean", "install"]
+    subprocess.check_call(command, cwd=os.path.dirname(pom_file))
+
+def deploy_maven_project(assembly_file):
+    """Deploys the Maven project with the given assembly file to GitHub's main repository."""
+    command = ["gh", "pages", "deploy", assembly_file]
+    subprocess.check_call(command)
+
+if __name__ == "__main__":
+    groupId = "com.einsteintrade"
+    artifactId = "einstein-trade"
+    pom_file = "pom.xml"
+    assembly_file = "target/einstein-trade-assembly.zip"
+
+    create_maven_project(groupId, artifactId)
+    add_assembly_dependency(pom_file)
+    build_maven_project(pom_file)
+    deploy_maven_project(assembly_file)
