@@ -1,0 +1,83 @@
+import numpy as np
+import pandas as pd
+from kivy.app import App
+from kivy.uix.label import Label
+from kivy.uix.gridlayout import GridLayout
+
+
+def get_data():
+    """
+    This function gets the data from the Quandl API.
+    """
+    df = pd.read_csv("https://www.quandl.com/api/v1/datasets/NSE/RELIANCE/data.csv?trim_start=2010-01-01&trim_end=2023-06-07&sort_order=desc")
+    df.set_index("Date", inplace=True)
+    return df
+
+
+def calculate_moving_averages(df, window_size):
+    """
+    This function calculates the moving averages for the given data.
+    """
+    for i in range(1, window_size + 1):
+        df["MA_" + str(i)] = df["Close"].rolling(window_size).mean()
+    return df
+
+
+def calculate_bollinger_bands(df, window_size, num_stds):
+    """
+    This function calculates the Bollinger Bands for the given data.
+    """
+    rolling_mean = df["Close"].rolling(window_size).mean()
+    rolling_std = df["Close"].rolling(window_size).std()
+    df["Upper_Band"] = rolling_mean + num_stds * rolling_std
+    df["Lower_Band"] = rolling_mean - num_stds * rolling_std
+    return df
+
+
+def get_signals(df):
+    """
+    This function generates the trading signals based on the Bollinger Bands.
+    """
+    for i in range(len(df) - 1):
+        if df["Close"][i] > df["Upper_Band"][i]:
+            df["Signal"][i] = 1
+        elif df["Close"][i] < df["Lower_Band"][i]:
+            df["Signal"][i] = -1
+        else:
+            df["Signal"][i] = 0
+    return df
+
+
+def backtest(df):
+    """
+    This function backtests the trading strategy using the given data.
+    """
+    positions = []
+    for i in range(len(df) - 1):
+        if df["Signal"][i] == 1:
+            positions.append(1)
+        elif df["Signal"][i] == -1:
+            positions.append(-1)
+        else:
+            positions.append(0)
+
+    portfolio_value = 10000
+    for i in range(len(positions)):
+        if positions[i] == 1:
+            portfolio_value += df["Close"][i]
+        elif positions[i] == -1:
+            portfolio_value -= df["Close"][i]
+
+    return portfolio_value
+
+
+class MyApp(App):
+    def build(self):
+        layout = GridLayout(cols=2)
+        layout.add_widget(Label(text="Portfolio Value:"))
+        layout.add_widget(Label(text=str(backtest(get_data()))))
+        return layout
+
+
+if __name__ == "__main__":
+    MyApp().run()
