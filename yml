@@ -9,5 +9,9 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/labeler@v4
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+        with: 
+workflows:
+    example-workflow:
+      jobs:
+        - node/run:
+            yarn-run: orbs:   node: circleci/node@5.1.0           repo-token: ${{ secrets.GITHUB_TOKEN }}
