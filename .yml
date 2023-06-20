@@ -1,0 +1,42 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def get_data(filename):
+    """Reads the data from the specified file."""
+    df = pd.read_csv(filename)
+    df['Date'] = pd.to_datetime(df['Date'])
+    return df
+
+def plot_data(df):
+    """Plots the data."""
+    plt.plot(df['Date'], df['Close'])
+    plt.show()
+
+def train_model(df):
+    """Trains a linear regression model on the data."""
+    X = df['Date'].values.reshape(-1, 1)
+    y = df['Close'].values
+
+    model = LinearRegression()
+    model.fit(X, y)
+
+    return model
+
+def predict_prices(model, start_date, end_date):
+    """Predicts the prices for the specified dates."""
+    X = np.array([start_date, end_date]).reshape(-1, 1)
+    predicted_prices = model.predict(X)
+
+    return predicted_prices
+
+if __name__ == '__main__':
+    """The main function."""
+    filename = 'data.csv'
+    df = get_data(filename)
+    plot_data(df)
+    model = train_model(df)
+    start_date = pd.to_datetime('2023-06-19')
+    end_date = pd.to_datetime('2023-06-26')
+    predicted_prices = predict_prices(model, start_date, end_date)
+    print(predicted_prices)
