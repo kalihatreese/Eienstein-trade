@@ -35,7 +35,7 @@ jobs:
           echo Add other actions to build,
           echo test, and deploy your project.
 import json
-import requests
+
 
 def get_data(symbol):
     url = "https://api.einstein.trade/v1/symbols/{}/data".format(symbol)
