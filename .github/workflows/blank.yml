@@ -34,3 +34,79 @@ jobs:
         run: |
           echo Add other actions to build,
           echo test, and deploy your project.
+import json
+import requests
+
+def get_data(symbol):
+    url = "https://api.einstein.trade/v1/symbols/{}/data".format(symbol)
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception("Error getting data for symbol {}".format(symbol))
+
+def get_quotes(symbols):
+    quotes = {}
+    for symbol in symbols:
+        data = get_data(symbol)
+        quotes[symbol] = data["quote"]
+    return quotes
+
+def get_positions(account_id):
+    url = "https://api.einstein.trade/v1/accounts/{}/positions".format(account_id)
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception("Error getting positions for account {}".format(account_id))
+
+def get_orders(account_id):
+    url = "https://api.einstein.trade/v1/accounts/{}/orders".format(account_id)
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception("Error getting orders for account {}".format(account_id))
+
+def get_balance(account_id):
+    url = "https://api.einstein.trade/v1/accounts/{}/balance".format(account_id)
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception("Error getting balance for account {}".format(account_id))
+
+def get_quotes_and_positions(account_id, symbols):
+    quotes = get_quotes(symbols)
+    positions = get_positions(account_id)
+    return quotes, positions
+
+def get_orders_and_balance(account_id):
+    orders = get_orders(account_id)
+    balance = get_balance(account_id)
+    return orders, balance
+
+def main():
+    # Get the symbols to trade
+    symbols = ["AAPL", "MSFT", "GOOGL"]
+
+    # Get the quotes for the symbols
+    quotes = get_quotes(symbols)
+
+    # Get the positions for the account
+    positions = get_positions(account_id)
+
+    # Get the orders for the account
+    orders = get_orders(account_id)
+
+    # Get the balance for the account
+    balance = get_balance(account_id)
+
+    # Do something with the data
+    print(quotes)
+    print(positions)
+    print(orders)
+    print(balance)
+
+if __name__ == "__main__":
+    main()
