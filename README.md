@@ -1,4 +1,4 @@
-# Eienstein-trade
+we# Eienstein-trade
 trading platform
 
 The final Einstein -Trade - Final 
@@ -31,7 +31,7 @@ jobs:
 
       # Set the account_id as an environment variable
       - name: Set account_id
-        run: echo "ACCOUNT_ID=your_account_id_here" >> $GITHUB_ENV
+        run: echo "ACCOUNT_ID=ReeseReese23" >> $GITHUB_ENV
 
       # Install Python
       - name: Setup Python
