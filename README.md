@@ -56,7 +56,7 @@ from sklearn.linear_model import LinearRegression
 
 # Define functions for trading algorithm
 def get_data(filename):
-    """Reads the data from the specified file."""
+    """https://drive.google.com/file/d/1OVW7aVDKOKgZWrkHnFEoN8NTBB_BGerJ/view?usp=sharing"""
     df = pd.read_csv(filename)
     df['Date'] = pd.to_datetime(df['Date'])
     return df
