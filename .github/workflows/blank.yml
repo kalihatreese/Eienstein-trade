@@ -1,112 +1,74 @@
-# This is a basic workflow to help you get started with Actions
 
-name: CI
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import requests
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+from sklearn.preprocessing import MinMaxScaler
 
-# Controls when the workflow will run
-on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
-jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
-
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
-import json
-
-
-def get_data(symbol):
-    url = "https://api.einstein.trade/v1/symbols/{}/data".format(symbol)
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.json()
+# Define the Fibonacci sequence
+def fibonacci(n):
+    if n == 0:
+        return 0
+    elif n == 1:
+        return 1
     else:
-        raise Exception("Error getting data for symbol {}".format(symbol))
+        return fibonacci(n - 1) + fibonacci(n - 2)
 
-def get_quotes(symbols):
-    quotes = {}
-    for symbol in symbols:
-        data = get_data(symbol)
-        quotes[symbol] = data["quote"]
-    return quotes
+# Calculate Fibonacci retracement levels
+def retracement_levels(start, end, retrace_percentages):
+    levels = []
+    for percentage in retrace_percentages:
+        level = end - percentage * (end - start)
+        levels.append(level)
+    return levels
 
-def get_positions(account_id):
-    url = "https://api.einstein.trade/v1/accounts/{}/positions".format(account_id)
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise Exception("Error getting positions for account {}".format(account_id))
+# Get historical data for a specific symbol
+def get_historical_data(symbol):
+    data = pd.read_csv('BTC-USD.csv')
+    data.set_index('Date', inplace=True)
+    return data[symbol]
 
-def get_orders(account_id):
-    url = "https://api.einstein.trade/v1/accounts/{}/orders".format(account_id)
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise Exception("Error getting orders for account {}".format(account_id))
+# Plot historical data and Fibonacci retracement levels
+def plot_data_with_retracement_levels(symbol, retrace_percentages):
+    data = get_historical_data(symbol)
+    data.plot()
 
-def get_balance(account_id):
-    url = "https://api.einstein.trade/v1/accounts/{}/balance".format(account_id)
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise Exception("Error getting balance for account {}".format(account_id))
+    retracement_levels = calculate_retracement_levels(data.iloc[0]['Close'], data.iloc[-1]['Close'], retrace_percentages)
+    for level in retracement_levels:
+        plt.axhline(y=level, color='r', linestyle='--', label=f'{level:.2f}')
 
-def get_quotes_and_positions(account_id, symbols):
-    quotes = get_quotes(symbols)
-    positions = get_positions(account_id)
-    return quotes, positions
+    plt.title(f'Historical Data for {symbol} with Fibonacci Retracement Levels')
+    plt.legend()
+    plt.show()
 
-def get_orders_and_balance(account_id):
-    orders = get_orders(account_id)
-    balance = get_balance(account_id)
-    return orders, balance
+# Incorporate liquid Nero networking
+def liquid_nero_networking(symbol, start_date, end_date):
+    # Replace placeholder API key with your actual API key
+    api_key = 'YOUR_API_KEY'
+    endpoint = f'https://api.liquidnero.com/sentiment/{symbol}?start={start_date}&end={end_date}'
+    headers = {'Authorization': f'Bearer {api_key}'}
 
-def main():
-    # Get the symbols to trade
-    symbols = ["AAPL", "MSFT", "GOOGL"]
+    try:
+        response = requests.get(endpoint, headers=headers)
+        if response.status_code == 200:
+            sentiment_data = response.json()
+            # Analyze sentiment data and identify potential trading signals
+            # ...
+            return sentiment_data
+        else:
+            print(f'Error accessing Liquid Nero API: {response.status_code}')
+            return None
+    except requests.exceptions.RequestException as e:
+        print(f'Error connecting to Liquid Nero API: {e}')
+        return None
 
-    # Get the quotes for the symbols
-    quotes = get_quotes(symbols)
+# Machine learning for trading signal generation
+def train_trading_model(symbol):
+    # Retrieve historical data and calculate Fibonacci retracement levels
+    data = get_historical_data(symbol)
+    retracement_levels = calculate_retracement_levels(data.iloc[0]['Close'], data.iloc[-1]['Close'], [0.236, 0.382, 0.5])
 
-    # Get the positions for the account
-    positions = get_positions(account_id)
-
-    # Get the orders for the account
-    orders = get_orders(account_id)
-
-    # Get the balance for the account
-    balance = get_balance(account_id)
-
-    # Do something with the data
-    print(quotes)
-    print(positions)
-    print(orders)
-    print(balance)
-
-if __name__ == "__main__":
-    main()
+    # Analyze liquid Nero sentiment data
+    liquid_nero_sentiment = liquid_nero_networking(symbol, data.index
