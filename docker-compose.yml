@@ -9,3 +9,91 @@ services:
     command: python app.py 
 
 GitHub CLI api # https://cli.github.com/manual/gh_api gh api \ -H "Accept: application/vnd.github+json" \ -H "X-GitHub-Api-Version: 2022-11-28" \ /orgs/ORG/docker/conflicts
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import requests
+import websocket
+
+def on_message(ws, message):
+    # Process the received message
+    data = json.loads(message)
+    # Generate trading signals based on the latest market data
+    make_informed_trading_decision(data)
+
+def on_error(ws, error):
+    print(f"Error: {error}")
+
+def on_close(ws, code, reason):
+    print(f"Connection closed: {code} ({reason})")
+
+def on_open(ws):
+    print("Connection opened")
+
+def make_informed_trading_decision(data):
+    # Analyze the received market data and generate trading signals
+    # /storage/emulated/0/Download/BTC_usd.csv
+
+def fibonacci(n):
+    if n == 0:
+        return 0
+    elif n == 1:
+        return 1
+    else:
+        return fibonacci(n - 1) + fibonacci(n - 2)
+
+def retracement_levels(start, end, retrace_percentages):
+    levels = []
+    for percentage in retrace_percentages:
+        level = end - percentage * (end - start)
+        levels.append(level)
+    return levels
+
+def get_historical_data(symbol):
+    data = pd.read_csv('data.csv')
+    data.set_index('Date', inplace=True)
+    return data[symbol]
+
+def plot_data_with_retracement_levels(symbol, retrace_percentages):
+    data = get_historical_data(symbol)
+    data.plot()
+
+    retracement_levels = calculate_retracement_levels(data.iloc[0]['Close'], data.iloc[-1]['Close'], retrace_percentages)
+    for level in retracement_levels:
+        plt.axhline(y=level, color='r', linestyle='--', label=f'{level:.2f}')
+
+    plt.title(f'Historical Data for {symbol} with Fibonacci Retracement Levels')
+    plt.legend()
+    plt.show()
+
+def liquid_nero_networking(symbol, start_date, end_date):
+    # Access the Liquid Nero API to retrieve relevant social sentiment data
+    api_key = 'YOUR_API_KEY'
+    endpoint = f'https://api.liquidnero.com/sentiment/{symbol}?start={start_date}&end={end_date}'
+    headers = {'Authorization': f'Bearer {api_key}'}
+
+    response = requests.get(endpoint, headers=headers)
+    if response.status_code == 200:
+        sentiment_data = response.json()
+        # Analyze sentiment data and identify potential trading signals
+        # ...
+
+def fundamental_analysis(symbol):
+    # Analyze financial statements, company news, and industry trends
+    # ...
+
+if __name__ == '__main__':
+    symbol = 'BTC-USD'
+
+    # Retrieve historical data and calculate Fibonacci retracement levels
+    data = get_historical_data(symbol)
+    retracement_levels = calculate_retracement_levels(data.iloc[0]['Close'], data.iloc[-1]['Close'], [0.236, 0.382, 0.5])
+
+    plot_data_with_retracement_levels(symbol, retracement_levels)
+    liquid_nero_networking(symbol, data.index[0], data.index[-1])
+    fundamental_analysis(symbol)
+
+    # Connect to the WebSocket stream and receive real-time market data
+    websocket.enableTrace(True)
+    ws = websocket.WebSocketApp("wss://api.websocket.com/v1/stream", on_message=on_message, on_error=on_error, on_close=on_close)
+    ws.run_forever()
