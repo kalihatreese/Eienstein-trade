@@ -1,12 +1,17 @@
-version: 2.1
+name: Pull request labeler
+on: [ pull_request_target ]
+
 jobs:
-  build:
-    docker:
-      - image: cimg/base:current
-    resource_class: kalihatreese/eiensteinbuild
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - run: echo "Hi I'm on a Container Runner!"
+      - uses: actions/labeler@v4
+        with: 
 workflows:
-  build-workflow:
-    jobs:
-      - build
+    example-workflow:
+      jobs:
+        - node/run:
+            yarn-run: orbs:   node: circleci/node@5.1.0           repo-token: ${{ secrets.GITHUB_TOKEN }}
