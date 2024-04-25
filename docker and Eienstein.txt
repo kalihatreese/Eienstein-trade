@@ -1,45 +1,56 @@
-# Dockerfile
+# Use an official Python runtime as a parent image
+FROM python:3.8-slim-buster
 
-FROM python:3.8
-
+# Set the working directory in the container to /app
 WORKDIR /app
 
-COPY requirements.txt .
+# Add the current directory contents into the container at /app
+ADD . /app
 
-RUN pip install -r requirements.txt
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Make port 80 available to the world outside this container
+EXPOSE 80
 
+# Define environment variable
+ENV NAME World
+
+# Run app.py when the container launches
 CMD ["python", "app.py"]
 
-# app.py
 
 import numpy as np
 import pandas as pd
 import requests
 
 def get_stock_price(symbol):
-    url = "https://api.iextrading.com/1.0/stock/{}/price".format(symbol)
+    """Get the current price of a stock using the IEX API."""
+    url = f"https://api.iextrading.com/1.0/stock/{symbol}/price"
     response = requests.get(url)
     if response.status_code == 200:
         return response.json()["price"]
     else:
-        raise Exception("Error getting stock price for {}: {}".format(symbol, response.status_code))
+        raise Exception(f"Error getting stock price for {symbol}: {response.status_code}")
 
 def main():
+    """Get stock prices for a list of symbols."""
     # Get the stock symbols from the user
-    symbols = input("Enter stock symbols (comma-separated): ").split(",")
+    symbols = input("Enter stock symbols (comma-separated): ").strip().split(",")
 
     # Get the stock prices
     prices = []
     for symbol in symbols:
-        price = get_stock_price(symbol)
-        prices.append(price)
+        try:
+            price = get_stock_price(symbol.strip())
+            prices.append(price)
+        except Exception as e:
+            print(f"Error getting stock price for {symbol}: {e}")
 
     # Print the stock prices
-    print("Stock prices:")
+    print("\nStock prices:")
     for symbol, price in zip(symbols, prices):
-        print("{}: ${}".format(symbol, price))
+        print(f"{symbol}: ${price:.2f}")
 
 if __name__ == "__main__":
     main()
