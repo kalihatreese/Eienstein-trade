@@ -1,31 +1,45 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
+from sklearn.linear_model import LinearRegression
 
 def get_data(filename):
-    """Reads the data from the specified file."""
+    """Reads the data from the specified file and returns the DataFrame."""
     df = pd.read_csv(filename)
     df['Date'] = pd.to_datetime(df['Date'])
     return df
 
 def plot_data(df):
-    """Plots the data."""
+    """Plots the 'Close' column data over time."""
     plt.plot(df['Date'], df['Close'])
+    plt.title('Close Price Over Time')
+    plt.xlabel('Date')
+    plt.ylabel('Close Price')
+    plt.grid(True)
     plt.show()
 
 def train_model(df):
     """Trains a linear regression model on the data."""
-    X = df['Date'].values.reshape(-1, 1)
-    y = df['Close'].values
+    X = df[['Date']]
+    X['Date'] = X['Date'].map(dt64_to_ordinal)
+    y = df['Close']
 
     model = LinearRegression()
     model.fit(X, y)
 
     return model
 
+def dt64_to_ordinal(series):
+    """Converts a pandas datetime64 series to ordinal numbers."""
+    return (series - pd.Timestamp('1970-01-01')) // timedelta(days=1)
+
 def predict_prices(model, start_date, end_date):
     """Predicts the prices for the specified dates."""
-    X = np.array([start_date, end_date]).reshape(-1, 1)
+    start_date_ordinal = dt64_to_ordinal(start_date)
+    end_date_ordinal = dt64_to_ordinal(end_date)
+
+    X = np.array([[start_date_ordinal], [end_date_ordinal]]).reshape(-1, 1)
     predicted_prices = model.predict(X)
 
     return predicted_prices
@@ -36,7 +50,7 @@ if __name__ == '__main__':
     df = get_data(filename)
     plot_data(df)
     model = train_model(df)
-    start_date = pd.to_datetime('2023-06-19')
-    end_date = pd.to_datetime('2023-06-26')
+    start_date = datetime(2023, 6, 19)
+    end_date = datetime(2023, 6, 26)
     predicted_prices = predict_prices(model, start_date, end_date)
     print(predicted_prices)
