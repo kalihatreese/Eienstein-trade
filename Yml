@@ -1,5 +1,8 @@
-name: Pull request labeler
-on: [ pull_request_target ]
+name: Pull Request Labeler
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, labeled, unlabeled]
 
 jobs:
   triage:
@@ -7,11 +10,29 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+
     steps:
-      - uses: actions/labeler@v4
-        with: 
-workflows:
-    example-workflow:
-      jobs:
-        - node/run:
-            yarn-run: orbs:   node: circleci/node@5.1.0           repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Label pull request
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const { context } = github;
+            const labelName = 'needs review'; // replace with your desired label name
+
+            await github.issues.addLabels({
+              ...context.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: [labelName]
+            });
