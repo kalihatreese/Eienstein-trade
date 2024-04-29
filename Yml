@@ -1,12 +1,7 @@
 version: 2.1
-jobs:
-  build:
+
+executors:
+  kalihatreese:
     docker:
-      - image: cimg/base:current
-    resource_class: kalihatreese/eiensteinbuild
-    steps:
-      - run: echo "Hi I'm on a Container Runner!"
-workflows:
-  build-workflow:
-    jobs:
-      - build
+      image: cimg/base:current
+
