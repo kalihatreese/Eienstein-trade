@@ -1,0 +1,37 @@
+name: Train and Deploy Trading Model
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * *'  # Schedule to run daily at midnight
+
+jobs:
+  train-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pandas numpy matplotlib requests tensorflow scikit-learn
+
+    - name: Fetch historical data and train model
+      run: |
+        python train_model.py
+
+    - name: Deploy model for live trading
+      run: |
+        python deploy_model.py
+      env:
+        ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
+        TRADING_PLATFORM_API_KEY: ${{ secrets.TRADING_PLATFORM_API_KEY }}
