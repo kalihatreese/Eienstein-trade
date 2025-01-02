@@ -1,0 +1,71 @@
+import numpy as np
+import pandas as pd
+from kivy.app import App
+from kivy.uix.label import Label
+from kivy.uix.gridlayout import GridLayout
+
+def get_data(start_date, end_date):
+    """
+    This function gets the data from the Quandl API.
+    """
+    df = pd.read_csv(f"https://www.quandl.com/api/v1/datasets/NSE/RELIANCE/data.csv?trim_start={start_date}&trim_end={end_date}&sort_order=desc")
+    df.set_index("Date", inplace=True)
+    return df
+
+
+def calculate_moving_averages(df, window_size):
+    """
+    This function calculates the moving averages for the given data.
+    """
+    df["MA_" + str(window_size)] = df["Close"].rolling(window_size).mean()
+    return df
+
+
+def calculate_bollinger_bands(df, window_size, num_stds):
+    """
+    This function calculates the Bollinger Bands for the given data.
+    """
+    df["BB_Upper_" + str(window_size)] = df["Close"].rolling(window_size).mean() + num_stds * df["Close"].rolling(window_size).std()
+    df["BB_Lower_" + str(window_size)] = df["Close"].rolling(window_size).mean() - num_stds * df["Close"].rolling(window_size).std()
+    return df
+
+
+def get_signals(df, window_size, num_stds):
+    """
+    This function generates the trading signals based on the Bollinger Bands.
+    """
+    df["Signal"] = np.where((df["Close"] > df["BB_Upper_" + str(window_size)]), 1, np.where((df["Close"] < df["BB_Lower_" + str(window_size)]), -1, 0))
+    return df
+
+
+def backtest(df):
+    """
+    This function backtests the trading strategy using the given data.
+    """
+    positions = df["Signal"].tolist()
+    portfolio_value = 10000
+    for i in range(len(positions)):
+        if positions[i] == 1:
+            portfolio_value += df["Close"][i]
+        elif positions[i] == -1:
+            portfolio_value -= df["Close"][i]
+
+    return portfolio_value
+
+
+class MyApp(App):
+    def build(self):
+        layout = GridLayout(cols=2)
+        start_date = "2010-01-01"
+        end_date = "2023-06-07"
+        df = get_data(start_date, end_date)
+        df = calculate_moving_averages(df, 20)
+        df = calculate_bollinger_bands(df, 20, 2)
+        df = get_signals(df, 20, 2)
+        layout.add_widget(Label(text="Portfolio Value:"))
+        layout.add_widget(Label(text=str(backtest(df))))
+        return layout
+
+
+if __name__ == "__main__":
+    MyApp().run()
