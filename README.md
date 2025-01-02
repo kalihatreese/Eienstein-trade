@@ -1,4 +1,4 @@
-Einstein Trade
+Einstein Trade.
 
 Einstein Trade is a powerful trading algorithm and backtesting system designed for financial market analysis and automated trading. It supports machine learning techniques, real-time data feeds, and highly efficient backtesting capabilities, enabling users to trade with intelligence and precision.
 
