@@ -1,0 +1,105 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from kivy.app import App
+from kivy.uix.label import Label
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.textinput import TextInput
+from kivy.uix.button import Button
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.popup import Popup
+
+def get_data(stock_symbol, start_date, end_date):
+    """
+    This function gets the data from the Quandl API.
+    """
+    try:
+        df = pd.read_csv(f"https://www.quandl.com/api/v1/datasets/NSE/{stock_symbol}/data.csv?trim_start={start_date}&trim_end={end_date}&sort_order=desc")
+        df.set_index("Date", inplace=True)
+        return df
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame on error
+
+def calculate_moving_averages(df, window_size):
+    df["MA_" + str(window_size)] = df["Close"].rolling(window_size).mean()
+    return df
+
+def calculate_bollinger_bands(df, window_size, num_stds):
+    df["BB_Upper_" + str(window_size)] = df["Close"].rolling(window_size).mean() + num_stds * df["Close"].rolling(window_size).std()
+    df["BB_Lower_" + str(window_size)] = df["Close"].rolling(window_size).mean() - num_stds * df["Close"].rolling(window_size).std()
+    return df
+
+def get_signals(df, window_size, num_stds):
+    df["Signal"] = np.where((df["Close"] > df["BB_Upper_" + str(window_size)]), 1, np.where((df["Close"] < df["BB_Lower_" + str(window_size)]), -1, 0))
+    return df
+
+def backtest(df):
+    positions = df["Signal"].tolist()
+    portfolio_value = 10000
+    for i in range(len(positions)):
+        if positions[i] == 1:
+            portfolio_value += df["Close"][i]
+        elif positions[i] == -1:
+            portfolio_value -= df["Close"][i]
+    return portfolio_value
+
+def plot_data(df, window_size):
+    plt.figure(figsize=(12, 6))
+    plt.plot(df.index, df["Close"], label='Close Price', color='blue')
+    plt.plot(df.index, df["MA_" + str(window_size)], label='Moving Average', color='orange')
+    plt.plot(df.index, df["BB_Upper_" + str(window_size)], label='Bollinger Upper Band', color='red')
+    plt.plot(df.index, df["BB_Lower_" + str(window_size)], label='Bollinger Lower Band', color='green')
+    plt.title('Stock Price with Bollinger Bands')
+    plt.xlabel('Date')
+    plt.ylabel('Price')
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+class MyApp(App):
+    def build(self):
+        self.layout = BoxLayout(orientation='vertical')
+        
+        self.stock_input = TextInput(hint_text='Stock Symbol (e.g., RELIANCE)', multiline=False)
+        self.start_date_input = TextInput(hint_text='Start Date (YYYY-MM-DD)', multiline=False)
+        self.end_date_input = TextInput(hint_text='End Date (YYYY-MM-DD)', multiline=False)
+        self.window_size_input = TextInput(hint_text='Moving Average Window Size', multiline=False)
+        self.num_stds_input = TextInput(hint_text='Number of Standard Deviations', multiline=False)
+        
+        self.run_button = Button(text='Run Backtest')
+        self.run_button.bind(on_press=self.run_backtest)
+        
+        self.layout.add_widget(self.stock_input)
+        self.layout.add_widget(self.start_date_input)
+        self.layout.add_widget(self.end_date_input)
+        self.layout.add_widget(self.window_size_input)
+        self.layout.add_widget(self.num_stds_input)
+        self.layout.add_widget(self.run_button)
+        
+        return self.layout
+
+    def run_backtest(self, instance):
+        stock_symbol = self.stock_input.text.strip()
+        start_date = self.start_date_input.text.strip()
+        end_date = self.end_date_input.text.strip ()
+        window_size = int(self.window_size_input.text.strip())
+        num_stds = int(self.num_stds_input.text.strip())
+
+        df = get_data(stock_symbol, start_date, end_date)
+        if df.empty:
+            popup = Popup(title='Error', content=Label(text='Failed to fetch data. Please check the stock symbol and dates.'), size_hint=(None, None), size=(400, 200))
+            popup.open()
+            return
+
+        df = calculate_moving_averages(df, window_size)
+        df = calculate_bollinger_bands(df, window_size, num_stds)
+        df = get_signals(df, window_size, num_stds)
+        portfolio_value = backtest(df)
+
+        self.layout.add_widget(Label(text=f"Portfolio Value: {portfolio_value}"))
+
+        plot_data(df, window_size)
+
+if __name__ == "__main__":
+    MyApp().run()
